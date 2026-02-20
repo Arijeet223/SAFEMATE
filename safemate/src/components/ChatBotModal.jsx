@@ -87,7 +87,7 @@ export default function ChatBotModal({ onClose, onSOS }) {
     };
 
     return (
-        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "#05071a", display: "flex", flexDirection: "column" }}>
+        <div className="mobile-modal">
             {/* Header */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", background: "rgba(5,7,26,0.9)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                 <button onClick={onClose} style={{ background: "transparent", border: "none", color: "#a5b4fc", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>

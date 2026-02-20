@@ -1,134 +1,182 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import BigButton from '../components/BigButton';
+import { GoogleMap, useJsApiLoader, Marker } from '@react-google-maps/api';
 import ChatBotModal from '../components/ChatBotModal';
 import SurvivalGuideModal from '../components/SurvivalGuideModal';
+import NewsWidget from '../components/NewsWidget';
+
+const mapContainerStyle = {
+    width: '100%',
+    height: '220px',
+    borderRadius: '16px',
+    border: '1px solid rgba(255,255,255,0.05)',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+};
+
+const defaultCenter = { lat: 20.5937, lng: 78.9629 };
 
 export default function UserDashboard() {
     const navigate = useNavigate();
     const [showChat, setShowChat] = useState(false);
     const [showGuide, setShowGuide] = useState(false);
+    const [location, setLocation] = useState(defaultCenter);
+
+    const { isLoaded } = useJsApiLoader({
+        id: 'google-map-script',
+        googleMapsApiKey: "AIzaSyCMK2OL0jkWWOVXo5As1MGsrZle8kuqMng"
+    });
+
+    useEffect(() => {
+        const locString = localStorage.getItem('safemate_user_loc');
+        if (locString) {
+            try { setLocation(JSON.parse(locString)); } catch (e) { }
+        }
+    }, []);
 
     return (
-        <div style={{ padding: "30px 20px 70px", maxWidth: 600, margin: "0 auto", position: "relative" }}>
+        <div style={{ padding: "20px 20px 140px", maxWidth: 600, margin: "0 auto", position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
 
-            {/* Header */}
-            <div style={{ display: "flex", alignItems: "center", gap: 13, marginBottom: 40 }}>
-                <div style={{ position: "relative" }}>
-                    <div style={{ width: 46, height: 46, borderRadius: 15, background: "linear-gradient(135deg,#4361ee,#7209b7,#f72585)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, boxShadow: "0 0 30px rgba(67,97,238,0.45)" }}>🛡️</div>
-                </div>
-                <div>
-                    <div style={{ fontWeight: 900, fontSize: 22, letterSpacing: "-0.04em", lineHeight: 1 }}>
-                        Safemate <span style={{ background: "linear-gradient(90deg,#4cc9f0,#7209b7,#f72585,#4cc9f0)", backgroundSize: "200% auto", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", animation: "shimmerGrad 4s linear infinite" }}>AI</span>
+            {/* Header Area */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 42, height: 42, borderRadius: 12, background: "linear-gradient(135deg,#4361ee,#7209b7,#f72585)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, boxShadow: "0 0 20px rgba(67,97,238,0.3)" }}>
+                        🛡️
                     </div>
-                    <div style={{ fontSize: 10, color: "#94a3b8", fontFamily: "'JetBrains Mono',monospace", letterSpacing: "0.15em", marginTop: 3 }}>USER INTERFACE</div>
+                    <div>
+                        <div style={{ fontWeight: 800, fontSize: 20, letterSpacing: "-0.03em", lineHeight: 1.1, color: "#f8fafc" }}>
+                            Safemate <span style={{ color: "#4cc9f0" }}>AI</span>
+                        </div>
+                        <div style={{ fontSize: 10, color: "#94a3b8", fontFamily: "'JetBrains Mono',monospace", letterSpacing: "0.1em", marginTop: 2 }}>
+                            CITIZEN INTERFACE
+                        </div>
+                    </div>
                 </div>
-                <button
-                    onClick={() => navigate('/authority')}
-                    style={{ marginLeft: "auto", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 10, padding: "8px 12px", color: "#e2e8f0", fontSize: 12, cursor: "pointer" }}
+
+                <div
+                    onClick={() => navigate('/')}
+                    style={{ background: "rgba(255,255,255,0.06)", borderRadius: 10, padding: "8px 12px", color: "#cbd5e1", fontSize: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
                 >
-                    To Authority →
-                </button>
+                    <span style={{ fontSize: 14 }}>🔄</span> Switch
+                </div>
             </div>
 
-            <div style={{ marginBottom: 30 }}>
-                <h1 style={{ fontSize: 28, fontWeight: 900, marginBottom: 8 }}>Stay Safe. <br />Help is nearby.</h1>
-                <p style={{ color: "#94a3b8", fontSize: 15 }}>India's Disaster Management Companion</p>
+            {/* Dynamic News & Weather Dashboard */}
+            <NewsWidget location={location} />
+
+            {/* Live Location Map Focus */}
+            <div style={{ marginBottom: 25 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 10 }}>
+                    <h2 style={{ fontSize: 15, fontWeight: 700, color: "#e2e8f0" }}>📍 Live Location</h2>
+                    <span style={{ fontSize: 11, color: "#06d6a0", background: "rgba(6,214,160,0.1)", padding: "2px 8px", borderRadius: 10 }}>GPS Active</span>
+                </div>
+                {isLoaded ? (
+                    <GoogleMap
+                        mapContainerStyle={mapContainerStyle}
+                        center={location}
+                        zoom={15}
+                        options={{
+                            styles: [
+                                { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                                { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                                { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+                                { featureType: "water", elementType: "geometry", stylers: [{ color: "#17263c" }] }
+                            ],
+                            disableDefaultUI: true,
+                        }}
+                    >
+                        <Marker position={location} icon={{ url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png" }} />
+                    </GoogleMap>
+                ) : (
+                    <div style={{ height: 220, background: "rgba(255,255,255,0.02)", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(255,255,255,0.1)" }}>
+                        <div className="spinner" style={{ borderTopColor: "#4cc9f0" }}></div>
+                    </div>
+                )}
             </div>
 
-            {/* BIG PRIMARY BUTTONS */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+            {/* Emergency Contacts - Clean Card Style */}
+            <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 16, padding: "18px", border: "1px solid rgba(255,255,255,0.05)", boxShadow: "0 4px 20px rgba(0,0,0,0.15)" }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#94a3b8", marginBottom: 12, letterSpacing: "0.05em" }}>DIRECT EMERGENCY DIAL</div>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <a href="tel:112" style={{ width: "30%", textAlign: "center", textDecoration: "none", background: "rgba(255,77,109,0.1)", padding: "12px 0", borderRadius: 10, border: "1px solid rgba(255,77,109,0.2)" }}>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: "#ff4d6d" }}>112</div>
+                        <div style={{ fontSize: 10, color: "#e2e8f0", marginTop: 2 }}>National</div>
+                    </a>
+                    <a href="tel:1078" style={{ width: "30%", textAlign: "center", textDecoration: "none", background: "rgba(76,201,240,0.1)", padding: "12px 0", borderRadius: 10, border: "1px solid rgba(76,201,240,0.2)" }}>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: "#4cc9f0" }}>1078</div>
+                        <div style={{ fontSize: 10, color: "#e2e8f0", marginTop: 2 }}>NDMA</div>
+                    </a>
+                    <a href="tel:108" style={{ width: "30%", textAlign: "center", textDecoration: "none", background: "rgba(6,214,160,0.1)", padding: "12px 0", borderRadius: 10, border: "1px solid rgba(6,214,160,0.2)" }}>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: "#06d6a0" }}>108</div>
+                        <div style={{ fontSize: 10, color: "#e2e8f0", marginTop: 2 }}>Medic</div>
+                    </a>
+                </div>
+            </div>
 
-                <div style={{ display: "flex", gap: "16px", alignItems: "stretch" }}>
-                    {/* BIG SOS CIRCLE (No animation, solid red, very visible) */}
+            {/* Bottom App Navigation Bar (Clean & Aligned) */}
+            <div className="mobile-modal bottom-nav-bar" style={{
+                top: "auto",
+                bottom: 0,
+                height: "80px",
+                background: "rgba(5, 7, 26, 0.98)", // Solid dark background to match app
+                borderTop: "1px solid rgba(255,255,255,0.1)",
+                display: "flex",
+                justifyContent: "space-between", // Even spacing horizontally
+                alignItems: "center", // Perfect vertical alignment
+                padding: "0 25px", // Side padding
+                zIndex: 1000,
+            }}>
+
+                {/* Survival Guide (Left) */}
+                <div onClick={() => setShowGuide(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", width: "80px" }}>
+                    <div style={{ fontSize: 24, marginBottom: 4, opacity: 0.9 }}>📋</div>
+                    <div style={{ fontSize: 11, fontWeight: 600, color: "#06d6a0" }}>Guide</div>
+                </div>
+
+                {/* Main SOS Button (Center - Popped out) */}
+                <div style={{ position: "relative", width: "90px", display: "flex", justifyContent: "center" }}>
                     <div
                         onClick={() => navigate('/report')}
                         style={{
-                            width: "180px",
-                            height: "180px",
+                            position: "absolute",
+                            top: "-40px", // Pops entirely out of the bar
+                            width: "78px",
+                            height: "78px",
                             borderRadius: "50%",
-                            background: "#ff0033",
+                            background: "linear-gradient(135deg, #ff0a33, #c1001a)",
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center",
                             justifyContent: "center",
                             cursor: "pointer",
-                            flexShrink: 0,
-                            boxShadow: "0 10px 40px rgba(255, 0, 51, 0.6)",
-                            transition: "transform 0.2s"
+                            boxShadow: "0 8px 30px rgba(255, 10, 51, 0.5), inset 0 2px 0 rgba(255,255,255,0.2)",
+                            border: "6px solid #05071a" // Global dark background to create a crisp cutout look
                         }}
-                        onMouseDown={e => e.currentTarget.style.transform = "scale(0.96)"}
+                        onMouseDown={e => e.currentTarget.style.transform = "scale(0.95)"}
                         onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
                         onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                     >
-                        <div style={{ fontSize: "50px", marginBottom: "5px" }}>🚨</div>
-                        <div style={{ fontSize: "36px", fontWeight: 900, color: "white", letterSpacing: "2px", textShadow: "0 2px 10px rgba(0,0,0,0.3)" }}>SOS</div>
-                    </div>
-
-                    {/* CHATBOT BUTTON (Smaller, to the right) */}
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                        <div
-                            onClick={() => setShowChat(true)}
-                            style={{
-                                flex: 1,
-                                background: "linear-gradient(135deg,rgba(67,97,238,0.15),rgba(114,9,183,0.1))",
-                                border: "2px solid rgba(67,97,238,0.4)",
-                                borderRadius: 24,
-                                padding: "20px",
-                                textAlign: "center",
-                                cursor: "pointer",
-                                display: "flex",
-                                flexDirection: "column",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                transition: "all 0.2s"
-                            }}
-                            onMouseDown={e => e.currentTarget.style.transform = "scale(0.96)"}
-                            onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
-                            onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
-                        >
-                            <div style={{ fontSize: 40, marginBottom: 8 }}>🤖</div>
-                            <div style={{ fontSize: 18, fontWeight: 900, color: "#a5b4fc", textShadow: "0 0 20px rgba(165,180,252,0.5)" }}>
-                                AI
-                            </div>
-                            <div style={{ fontSize: 12, color: "#475569", marginTop: 4 }}>
-                                ASSISTANT
-                            </div>
-                        </div>
+                        <div style={{ fontSize: 28, lineHeight: 1, marginTop: -2 }}>🚨</div>
+                        <div style={{ fontSize: 12, fontWeight: 900, color: "white", letterSpacing: "1px", marginTop: 2 }}>SOS</div>
                     </div>
                 </div>
 
-                {/* SURVIVAL GUIDE BUTTON */}
-                <BigButton
-                    icon="📋"
-                    title="SURVIVAL GUIDE"
-                    subtitle="Pre-flood, live flood & post-flood protocols"
-                    gradient="linear-gradient(135deg,rgba(6,214,160,0.1),rgba(6,214,160,0.02))"
-                    borderColor="rgba(6,214,160,0.3)"
-                    titleColor="#06d6a0"
-                    shadowColor="rgba(6,214,160,0.1)"
-                    onClick={() => setShowGuide(true)}
-                />
-
-            </div>
-
-            {/* Quick Emergency Numbers Bar */}
-            <div style={{ marginTop: 30, background: "rgba(255,255,255,0.03)", borderRadius: 20, padding: "16px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ fontSize: 12, fontFamily: "'JetBrains Mono',monospace", color: "#64748b", marginBottom: 15 }}>DIRECT DIAL</div>
-                <div style={{ display: "flex", justifyContent: "space-between" }}>
-                    <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 18, fontWeight: 900, color: "#ff4d6d", fontFamily: "'JetBrains Mono',monospace" }}>112</div>
-                        <div style={{ fontSize: 10, color: "#94a3b8" }}>National</div>
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 18, fontWeight: 900, color: "#4cc9f0", fontFamily: "'JetBrains Mono',monospace" }}>1078</div>
-                        <div style={{ fontSize: 10, color: "#94a3b8" }}>NDMA</div>
-                    </div>
-                    <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: 18, fontWeight: 900, color: "#06d6a0", fontFamily: "'JetBrains Mono',monospace" }}>108</div>
-                        <div style={{ fontSize: 10, color: "#94a3b8" }}>Ambulance</div>
-                    </div>
+                {/* AI Chatbot (Right - Extremely visible icon) */}
+                <div onClick={() => setShowChat(true)} style={{ display: "flex", flexDirection: "column", alignItems: "center", cursor: "pointer", width: "80px" }}>
+                    <div style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: "50%",
+                        background: "linear-gradient(135deg, #4cc9f0, #4361ee)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 18,
+                        marginBottom: 4,
+                        boxShadow: "0 0 10px rgba(76,201,240,0.5)"
+                    }}>🤖</div>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: "#e2e8f0" }}>Chat AI</div>
                 </div>
+
             </div>
 
             {/* Modals */}

@@ -5,7 +5,7 @@ export default function SurvivalGuideModal({ onClose }) {
     const [activeGuide, setActiveGuide] = useState("Before Flood");
 
     return (
-        <div style={{ position: "fixed", inset: 0, zIndex: 1000, background: "#05071a", display: "flex", flexDirection: "column", overflowY: "auto" }}>
+        <div className="mobile-modal" style={{ overflowY: "auto" }}>
             {/* Header */}
             <div style={{ position: "sticky", top: 0, zIndex: 10, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", background: "rgba(5,7,26,0.95)", borderBottom: "1px solid rgba(255,255,255,0.05)", backdropFilter: "blur(10px)" }}>
                 <button onClick={onClose} style={{ background: "transparent", border: "none", color: "#a5b4fc", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>

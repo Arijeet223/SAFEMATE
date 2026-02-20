@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { saveEmergency } from '../data/emergencyStore';
 
 export default function ReportSection() {
     const navigate = useNavigate();
@@ -14,11 +15,27 @@ export default function ReportSection() {
 
     const handleSubmit = () => {
         setIsSubmitting(true);
+
+        const locString = localStorage.getItem('safemate_user_loc');
+        let loc = { lat: 26.2006, lng: 92.9376 }; // Default: Assam center
+        if (locString) {
+            try { loc = JSON.parse(locString); } catch (e) { }
+        }
+
         // Simulate API call to authorities
         setTimeout(() => {
+            saveEmergency({
+                type: formData.type === 'water_rising' ? 'Water Rising' :
+                    formData.type === 'trapped' ? 'Trapped' :
+                        formData.type === 'medical' ? 'Medical' : 'Hazard',
+                peopleCount: formData.people,
+                medicalNeeded: formData.injured,
+                location: loc,
+                address: "GPS Coordinates Lock"
+            });
             setIsSubmitting(false);
             setStep(3);
-        }, 2000);
+        }, 1500);
     };
 
     return (
